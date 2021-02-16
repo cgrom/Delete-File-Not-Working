@@ -120,6 +120,32 @@ void FileCopierWithProgress::TransferData(
     winrt::check_hresult(CfExecute(&opInfo, &opParams));
 }
 
+void FileCopierWithProgress::AckDelete(
+	_In_ CF_CONNECTION_KEY connectionKey,
+	_In_ LARGE_INTEGER transferKey,
+	_In_ NTSTATUS completionStatus
+)
+{
+	CF_OPERATION_INFO opInfo = { 0 };
+	CF_OPERATION_PARAMETERS opParams = { 0 };
+
+	opInfo.StructSize = sizeof(opInfo);
+	opInfo.Type = CF_OPERATION_TYPE_ACK_DELETE;
+	opInfo.ConnectionKey = connectionKey;
+	opInfo.TransferKey = transferKey;
+
+	opParams.ParamSize = CF_SIZE_OF_OP_PARAM(AckDelete);
+	opParams.AckDelete.CompletionStatus = completionStatus;
+	opParams.AckDelete.Flags = CF_OPERATION_ACK_DELETE_FLAG_NONE;
+
+    HRESULT hr = CfExecute(&opInfo, &opParams);
+    
+    if (hr != S_OK)
+	{
+        wprintf(L"Could not delete, hr %08x\n", hr);
+    }
+}
+
 void WINAPI FileCopierWithProgress::OverlappedCompletionRoutine(
     _In_ DWORD errorCode,
     _In_ DWORD numberOfBytesTransfered,
